@@ -1,11 +1,16 @@
-use std::{fmt, iter};
+use std::{collections::HashMap, fmt, iter};
 
-struct Input {
+use bitvec::vec::BitVec;
+
+use crate::Parse;
+
+#[derive(Clone)]
+pub struct Input {
     left:  Vec<u32>,
     right: Vec<u32>,
 }
 
-impl Input {
+impl Parse for Input {
     fn parse(input: &str) -> Self {
         let (left, right): (Vec<_>, Vec<_>) = input
             .lines()
@@ -19,9 +24,7 @@ impl Input {
     }
 }
 
-pub fn p1(input: &str) -> impl fmt::Display {
-    let Input { mut left, mut right } = Input::parse(input);
-
+pub fn p1_zip(Input { mut left, mut right }: Input) -> impl fmt::Display {
     left.sort_unstable();
     right.sort_unstable();
 
@@ -65,9 +68,16 @@ fn unique<T: Copy + Eq>(iter: impl IntoIterator<Item = T>) -> impl Iterator<Item
     UniqueIterator { iter: iter.into_iter(), peek: None }
 }
 
-pub fn p2_sorted(input: &str) -> impl fmt::Display {
-    let Input { mut left, mut right } = Input::parse(input);
+pub fn p2_hash(Input { left, right }: Input) -> impl fmt::Display {
+    let mut counts = HashMap::<u32, u32>::new();
+    for item in right {
+        *counts.entry(item).or_default() += 1;
+    }
 
+    left.into_iter().map(|item| item * counts.get(&item).copied().unwrap_or_default()).sum::<u32>()
+}
+
+pub fn p2_sorted(Input { mut left, mut right }: Input) -> impl fmt::Display {
     left.sort_unstable();
     right.sort_unstable();
 
@@ -92,4 +102,38 @@ pub fn p2_sorted(input: &str) -> impl fmt::Display {
     }
 
     output
+}
+
+pub fn p2_count(Input { left, right }: Input) -> impl fmt::Display {
+    fn collect_buckets(items: Vec<u32>) -> Vec<u32> {
+        let mut output = vec![0u32; 100000];
+        for item in items {
+            output[item as usize] += 1;
+        }
+        output
+    }
+
+    let left = collect_buckets(left);
+    let right = collect_buckets(right);
+
+    iter::zip(left, right).enumerate().map(|(i, (l, r))| (i as u32) * l * r).sum::<u32>()
+}
+
+pub fn p2_bitvec(Input { left, right }: Input) -> impl fmt::Display {
+    fn collect_buckets(items: Vec<u32>) -> (BitVec, Vec<u32>) {
+        let mut presence: BitVec = iter::repeat(false).take(100000).collect();
+        let mut output = vec![0u32; 100000];
+        for item in items {
+            presence.set(item as usize, true);
+            output[item as usize] += 1;
+        }
+        (presence, output)
+    }
+
+    let (left_presence, left) = collect_buckets(left);
+    let (right_presence, right) = collect_buckets(right);
+
+    let presence = left_presence & right_presence;
+
+    presence.iter_ones().map(|i| left[i] * right[i] * (i as u32)).sum::<u32>()
 }
