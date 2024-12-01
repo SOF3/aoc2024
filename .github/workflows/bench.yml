@@ -20,6 +20,8 @@ jobs:
       - name: Publish results
         id: deployment
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/criterion
   deploy:
     environment:
       name: github-pages
