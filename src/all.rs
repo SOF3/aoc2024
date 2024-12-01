@@ -41,6 +41,7 @@ macro_rules! main {
             }
         }
 
+        #[allow(dead_code)]
         pub fn bench(c: &mut Criterion) {
             fn try_unwrap<R, E: fmt::Debug>(f: impl FnOnce() -> Result<R, E>) -> R {
                 f().unwrap()
@@ -103,6 +104,7 @@ fn call<In: Parse, Out: fmt::Display>(mut f: impl FnMut(In) -> Out, input: &str)
     output.to_string()
 }
 
+#[allow(dead_code)]
 fn call_benched<In: Parse, Out: fmt::Display>(b: &mut Bencher, day: u32, f: impl FnMut(In) -> Out) {
     let input = load_input(Mode::Private, day).unwrap();
     let parsed: In = Parse::parse(&input);
@@ -139,6 +141,7 @@ main! {
             "sorted" => d1::p2_sorted,
             "count" => d1::p2_count,
             "bitvec" => d1::p2_bitvec,
+            "jq/hash" => jq!("d1.jq", "d1q2_hash"),
         }
     }
 }
