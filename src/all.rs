@@ -4,7 +4,7 @@ use std::{env, fmt, fs, io};
 
 use anyhow::Context;
 use clap::{Parser, ValueEnum};
-use criterion::{BatchSize, Criterion, Bencher};
+use criterion::{BatchSize, Bencher, Criterion};
 
 macro_rules! main {
     (
@@ -26,9 +26,7 @@ macro_rules! main {
                         $(
                             $part => {
                                 let input = load_input(args.mode, $day)?;
-
-                                let output = main!(@impl variant, &input, $impls);
-
+                                let output: String = main!(@impl variant, &input, $impls);
                                 println!("{output}");
 
                                 Ok(())
@@ -49,9 +47,12 @@ macro_rules! main {
 
             $($(
                 {
-                    let mut group = c.benchmark_group(concat!("Day ", $day, " Part ", $part));
-                    main!(@bench group, $day, $impls);
-                    group.finish();
+                    let mut group_rust = c.benchmark_group(concat!("Day ", $day, " Part ", $part, " Rust"));
+                    main!(@bench group_rust, $day, $impls, false);
+                    group_rust.finish();
+                    let mut group_jq = c.benchmark_group(concat!("Day ", $day, " Part ", $part, " JQ"));
+                    main!(@bench group_jq, $day, $impls, true);
+                    group_jq.finish();
                 }
             )*)*
         }
@@ -66,13 +67,15 @@ macro_rules! main {
     };
     (@bench $group:ident, $day:literal, {
         $($name:literal => $fn:expr,)*
-    }) => {
+    }, $is_jq:literal) => {
         $(
             {
                 let mut f = try_unwrap(move || anyhow::Ok($fn));
-                $group.bench_function($name, move |b| {
-                    call_benched(b, $day, &mut f);
-                });
+                if $name.starts_with("jq") == $is_jq{
+                    $group.bench_function($name, move |b| {
+                        call_benched(b, $day, &mut f);
+                    });
+                }
             }
         )*
     };
@@ -108,11 +111,7 @@ fn call<In: Parse, Out: fmt::Display>(mut f: impl FnMut(In) -> Out, input: &str)
 fn call_benched<In: Parse, Out: fmt::Display>(b: &mut Bencher, day: u32, f: impl FnMut(In) -> Out) {
     let input = load_input(Mode::Private, day).unwrap();
     let parsed: In = Parse::parse(&input);
-    b.iter_batched(
-        || parsed.clone(),
-        f,
-        BatchSize::LargeInput,
-    );
+    b.iter_batched(|| parsed.clone(), f, BatchSize::LargeInput);
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -128,22 +127,6 @@ pub struct Args {
     part:    u32,
     #[clap(default_value = "")]
     variant: String,
-}
-
-main! {
-    day 1 {
-        part 1 {
-            "zip" => d1::p1_zip,
-            "jq" => jq!("d1.jq", "d1q1"),
-        }
-        part 2 {
-            "hash" => d1::p2_hash,
-            "sorted" => d1::p2_sorted,
-            "count" => d1::p2_count,
-            "bitvec" => d1::p2_bitvec,
-            "jq/hash" => jq!("d1.jq", "d1q2_hash"),
-        }
-    }
 }
 
 fn load_input(mode: Mode, day: u32) -> anyhow::Result<String> {
@@ -194,5 +177,31 @@ impl Parse for JsonString {
     fn parse(input: &str) -> Self {
         let value = simd_json::json!(input);
         Self(simd_json::to_string(&value).unwrap())
+    }
+}
+
+main! {
+    day 1 {
+        part 1 {
+            "zip" => d1::p1_zip,
+            "jq" => jq!("d1.jq", "d1q1"),
+        }
+        part 2 {
+            "hash" => d1::p2_hash,
+            "sorted" => d1::p2_sorted,
+            "count" => d1::p2_count,
+            "bitvec" => d1::p2_bitvec,
+            "jq/hash" => jq!("d1.jq", "d1q2_hash"),
+        }
+    }
+    day 2 {
+        part 1 {
+            "windows" => d2::p1_windows,
+            "first-all" => d2::p1_first_all,
+        }
+        part 2 {
+            "brute" => d2::p2_brute_force,
+            "vec" => d2::p2_vec,
+        }
     }
 }

@@ -1,4 +1,3 @@
 mod all;
-pub use all::bench;
-pub use all::run;
 use all::Parse;
+pub use all::{bench, run};

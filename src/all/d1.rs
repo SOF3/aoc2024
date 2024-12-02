@@ -1,4 +1,5 @@
-use std::{collections::HashMap, fmt, iter};
+use std::collections::HashMap;
+use std::{fmt, iter};
 
 use bitvec::vec::BitVec;
 
