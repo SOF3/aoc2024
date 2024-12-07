@@ -209,9 +209,11 @@ main! {
     day 3 {
         part 1 {
             "find" => d3::p1_find,
+            "jq" => jq!("d3.jq", "d3q1"),
         }
         part 2 {
             "find" => d3::p2_find,
+            "jq" => jq!("d3.jq", "d3q2"),
         }
     }
 }
