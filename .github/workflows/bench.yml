@@ -20,7 +20,7 @@ jobs:
       # Run iai after criterion to ensure private solutions have been downloaded,
       # since the iai version cannot be built without private inputs.
       - name: Run iai
-        run: cargo bench iai --features iai-bench
+        run: cargo bench iai --features iai-bench >target/criterion/iai.txt
       - name: Publish results
         id: deployment
         uses: actions/upload-pages-artifact@v3
