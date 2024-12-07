@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "macros"]
+
 [package]
 name = "aoc2024"
 version = "0.1.0"
@@ -7,17 +10,29 @@ edition = "2021"
 anyhow = "1.0.93"
 bitvec = "1.0.1"
 clap = { version = "4.5.21", features = ["derive"] }
-criterion = "0.5.1"
 itertools = "0.13.0"
 jq-rs = { version = "0.4.1", features = ["bundled"] }
 paste = "1.0.15"
 reqwest = { version = "0.12.9", features = ["blocking"] }
 rustc-hash = "2.1.0"
 simd-json = "0.14.3"
+macros = { path = "macros" }
 
 [patch.crates-io]
 jq-src = { git = "https://github.com/SOF3/jq-src", rev = "refs/tags/jq-1.7.1" }
 
+[dev-dependencies]
+criterion = "0.5.1"
+iai = "0.1.1"
+
 [[bench]]
-name = "main"
+name = "criterion"
 harness = false
+
+[[bench]]
+name = "iai"
+harness = false
+
+
+[features]
+iai-bench = []

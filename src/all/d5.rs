@@ -28,7 +28,7 @@ impl Parse for Input {
         let mut updates = Vec::new();
 
         for line in lines.by_ref() {
-            if line == "" {
+            if line.is_empty() {
                 break;
             }
 
@@ -40,7 +40,7 @@ impl Parse for Input {
         }
 
         for line in lines {
-            if line == "" {
+            if line.is_empty() {
                 break;
             }
 

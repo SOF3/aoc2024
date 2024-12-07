@@ -4,94 +4,6 @@ use std::{env, fmt, fs, io};
 
 use anyhow::Context;
 use clap::{Parser, ValueEnum};
-use criterion::{BatchSize, Bencher, Criterion};
-
-macro_rules! main {
-    (
-        $(day $day:literal {
-            $(part $part:literal $impls:tt)*
-        })*
-    ) => {
-        $(
-            paste::paste! {
-                mod [<d $day>];
-            }
-        )*
-
-        pub fn run(args: Args) -> anyhow::Result<()> {
-            let variant = args.variant.as_str();
-            match args.day {
-                $(
-                    $day => match args.part {
-                        $(
-                            $part => {
-                                let input = load_input(args.mode, $day)?;
-                                let output: String = main!(@impl variant, &input, $impls);
-                                println!("{output}");
-
-                                Ok(())
-                            },
-                        )*
-                        _ => anyhow::bail!("Unimplemented part"),
-                    },
-                )*
-                _ => anyhow::bail!("Unimplemented day"),
-            }
-        }
-
-        #[allow(dead_code)]
-        pub fn bench(c: &mut Criterion) {
-            fn try_unwrap<R, E: fmt::Debug>(f: impl FnOnce() -> Result<R, E>) -> R {
-                f().unwrap()
-            }
-
-            $($(
-                {
-                    let mut group_rust = c.benchmark_group(concat!("Day ", $day, " Part ", $part, " Rust"));
-                    main!(@bench group_rust, $day, $impls, false);
-                    group_rust.finish();
-                    let mut group_jq = c.benchmark_group(concat!("Day ", $day, " Part ", $part, " JQ"));
-                    main!(@bench group_jq, $day, $impls, true);
-                    group_jq.finish();
-                }
-            )*)*
-        }
-    };
-    (@impl $variant:ident, $input:expr, {
-        $($name:literal => $fn:expr,)*
-    }) => {
-        match $variant {
-            $($name => call($fn, $input),)*
-            _ => anyhow::bail!("Unknown variant implementation"),
-        }
-    };
-    (@bench $group:ident, $day:literal, {
-        $($name:literal => $fn:expr,)*
-    }, $is_jq:literal) => {
-        $(
-            {
-                let mut f = try_unwrap(move || anyhow::Ok($fn));
-                if $name.starts_with("jq") == $is_jq{
-                    $group.bench_function($name, move |b| {
-                        call_benched(b, $day, &mut f);
-                    });
-                }
-            }
-        )*
-    };
-}
-
-macro_rules! jq {
-    ($file:literal, $function:literal) => {{
-        let mut program =
-            jq_rs::compile(concat!(include_str!(concat!("all/", $file)), "\n", $function))
-                .map_err(|err| anyhow::anyhow!("compile {}: {err}", $file))?;
-        move |data: JsonString| -> String {
-            let output = program.run(data.0.as_str()).expect("jq program error");
-            output
-        }
-    }};
-}
 
 fn call<In: Parse, Out: fmt::Display>(mut f: impl FnMut(In) -> Out, input: &str) -> String {
     let start_time = Instant::now();
@@ -107,15 +19,8 @@ fn call<In: Parse, Out: fmt::Display>(mut f: impl FnMut(In) -> Out, input: &str)
     output.to_string()
 }
 
-#[allow(dead_code)]
-fn call_benched<In: Parse, Out: fmt::Display>(b: &mut Bencher, day: u32, f: impl FnMut(In) -> Out) {
-    let input = load_input(Mode::Private, day).unwrap();
-    let parsed: In = Parse::parse(&input);
-    b.iter_batched(|| parsed.clone(), f, BatchSize::LargeInput);
-}
-
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum Mode {
+pub enum Mode {
     Sample,
     Private,
 }
@@ -129,7 +34,7 @@ pub struct Args {
     variant: String,
 }
 
-fn load_input(mode: Mode, day: u32) -> anyhow::Result<String> {
+pub fn load_input(mode: Mode, day: u32) -> anyhow::Result<String> {
     let dir = env::var("CARGO_MANIFEST_DIR").context("need cargo run")?;
     let path = PathBuf::from(dir).join("input").join(format!(
         "d{day}.{}.input.txt",
@@ -171,7 +76,7 @@ impl Parse for String {
 }
 
 #[derive(Clone)]
-struct JsonString(String);
+pub struct JsonString(pub String);
 
 impl Parse for JsonString {
     fn parse(input: &str) -> Self {
@@ -180,56 +85,56 @@ impl Parse for JsonString {
     }
 }
 
-main! {
+macros::all! {
     day 1 {
         part 1 {
-            "zip" => d1::p1_zip,
-            "jq" => jq!("d1.jq", "d1q1"),
+            "zip" => p1_zip,
+            "jq" => jq["d1q1"],
         }
         part 2 {
-            "hash" => d1::p2_hash,
-            "sorted" => d1::p2_sorted,
-            "count" => d1::p2_count,
-            "bitvec" => d1::p2_bitvec,
-            "jq/hash" => jq!("d1.jq", "d1q2_hash"),
+            "hash" => p2_hash,
+            "sorted" => p2_sorted,
+            "count" => p2_count,
+            "bitvec" => p2_bitvec,
+            "jq/hash" => jq["d1q2_hash"],
         }
     }
     day 2 {
         part 1 {
-            "windows" => d2::p1_windows,
-            "first-all" => d2::p1_first_all,
-            "jq" => jq!("d2.jq", "d2q1"),
+            "windows" => p1_windows,
+            "first-all" => p1_first_all,
+            "jq" => jq["d2q1"],
         }
         part 2 {
-            "brute" => d2::p2_brute_force,
-            "vec" => d2::p2_vec,
-            "jq" => jq!("d2.jq", "d2q2"),
+            "brute" => p2_brute_force,
+            "vec" => p2_vec,
+            "jq" => jq["d2q2"],
         }
     }
     day 3 {
         part 1 {
-            "find" => d3::p1_find,
-            "jq" => jq!("d3.jq", "d3q1"),
+            "find" => p1_find,
+            "jq" => jq["d3q1"],
         }
         part 2 {
-            "find" => d3::p2_find,
-            "jq" => jq!("d3.jq", "d3q2"),
+            "find" => p2_find,
+            "jq" => jq["d3q2"],
         }
     }
     day 4 {
         part 1 {
-            "brute" => d4::p1_brute,
+            "brute" => p1_brute,
         }
         part 2 {
-            "brute" => d4::p2_brute,
+            "brute" => p2_brute,
         }
     }
     day 5 {
         part 1 {
-            "fxhashmap-fxhashset" => d5::p1_fxhashmap_fxhashset,
-            "btreemap-fxhashset" => d5::p1_btreemap_fxhashset,
-            "fxhashmap-vec" => d5::p1_fxhashmap_vec,
-            "btreemap-vec" => d5::p1_btreemap_vec,
+            "fxhashmap-fxhashset" => p1_fxhashmap_fxhashset,
+            "btreemap-fxhashset" => p1_btreemap_fxhashset,
+            "fxhashmap-vec" => p1_fxhashmap_vec,
+            "btreemap-vec" => p1_btreemap_vec,
         }
     }
 }
