@@ -226,8 +226,10 @@ main! {
     }
     day 5 {
         part 1 {
-            "fxhash" => d5::p1_fxhash,
+            "fxhashmap-fxhashset" => d5::p1_fxhashmap_fxhashset,
             "btreemap-fxhashset" => d5::p1_btreemap_fxhashset,
+            "fxhashmap-vec" => d5::p1_fxhashmap_vec,
+            "btreemap-vec" => d5::p1_btreemap_vec,
         }
     }
 }
