@@ -216,4 +216,9 @@ main! {
             "jq" => jq!("d3.jq", "d3q2"),
         }
     }
+    day 4 {
+        part 1 {
+            "brute" => d4::p1_brute,
+        }
+    }
 }

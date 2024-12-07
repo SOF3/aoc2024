@@ -93,7 +93,7 @@ fn strip_prefix_str_mut(input: &mut &str, prefix: &str) -> bool {
 
 fn parse_int(input: &mut &str) -> Option<Sum> {
     let bytes = input.as_bytes();
-    if bytes.get(0).is_some_and(u8::is_ascii_digit) {
+    if bytes.first().is_some_and(u8::is_ascii_digit) {
         let value = Sum::from(bytes[0] - b'0');
         if bytes.get(1).is_some_and(u8::is_ascii_digit) {
             let value = value * 10 + Sum::from(bytes[1] - b'0');

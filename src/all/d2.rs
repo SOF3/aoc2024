@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{cmp, fmt};
 
 use itertools::Itertools;
 
@@ -92,12 +92,10 @@ pub fn p2_vec(input: Input) -> impl fmt::Display {
             line.0.iter().tuple_windows().map(|(&left, &right)| compare(left, right)).collect();
 
         let increase_count = directions.iter().filter(|&&d| d == Direction::Increase).count();
-        let dominants = if increase_count * 2 > directions.len() {
-            &[Direction::Increase][..]
-        } else if increase_count * 2 == directions.len() {
-            &[Direction::Increase, Direction::Decrease][..]
-        } else {
-            &[Direction::Decrease][..]
+        let dominants = match (increase_count * 2).cmp(&directions.len()) {
+            cmp::Ordering::Greater => &[Direction::Increase][..],
+            cmp::Ordering::Equal => &[Direction::Increase, Direction::Decrease][..],
+            cmp::Ordering::Less => &[Direction::Decrease][..],
         };
 
         dominants.iter().any(|&dominant| {
