@@ -224,4 +224,10 @@ main! {
             "brute" => d4::p2_brute,
         }
     }
+    day 5 {
+        part 1 {
+            "fxhash" => d5::p1_fxhash,
+            "btreemap-fxhashset" => d5::p1_btreemap_fxhashset,
+        }
+    }
 }

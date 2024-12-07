@@ -12,6 +12,7 @@ itertools = "0.13.0"
 jq-rs = { version = "0.4.1", features = ["bundled"] }
 paste = "1.0.15"
 reqwest = { version = "0.12.9", features = ["blocking"] }
+rustc-hash = "2.1.0"
 simd-json = "0.14.3"
 
 [patch.crates-io]
