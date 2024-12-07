@@ -198,10 +198,12 @@ main! {
         part 1 {
             "windows" => d2::p1_windows,
             "first-all" => d2::p1_first_all,
+            "jq" => jq!("d2.jq", "d2q1"),
         }
         part 2 {
             "brute" => d2::p2_brute_force,
             "vec" => d2::p2_vec,
+            "jq" => jq!("d2.jq", "d2q2"),
         }
     }
 }
