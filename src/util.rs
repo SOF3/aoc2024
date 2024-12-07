@@ -67,7 +67,7 @@ impl GridLoc {
         Some(Self {
             x: self.x,
             y: match self.y.checked_add(1)? {
-                y if y < grid.height - 1 => y,
+                y if y < grid.height => y,
                 _ => return None,
             },
         })
