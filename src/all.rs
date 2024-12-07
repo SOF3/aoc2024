@@ -206,4 +206,12 @@ main! {
             "jq" => jq!("d2.jq", "d2q2"),
         }
     }
+    day 3 {
+        part 1 {
+            "find" => d3::p1_find,
+        }
+        part 2 {
+            "find" => d3::p2_find,
+        }
+    }
 }
