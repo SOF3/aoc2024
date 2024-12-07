@@ -220,5 +220,8 @@ main! {
         part 1 {
             "brute" => d4::p1_brute,
         }
+        part 2 {
+            "brute" => d4::p2_brute,
+        }
     }
 }
