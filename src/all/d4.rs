@@ -33,7 +33,7 @@ pub fn p2_brute(input: String) -> u32 {
             [DirectDiagonal::RightUp, DirectDiagonal::LeftDown],
         ]
         .map(|ends| {
-            let values = ends.map(|direct| grid.get(loc.direct(direct, &grid)?));
+            let values = ends.map(|direct| grid.get(loc.direct(direct, grid)?));
             values == [Some(b'M'), Some(b'S')] || values == [Some(b'S'), Some(b'M')]
         });
         if matched[0] && matched[1] {

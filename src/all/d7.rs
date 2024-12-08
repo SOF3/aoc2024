@@ -48,7 +48,7 @@ fn parse(input: &str) -> impl Iterator<Item = Line> {
     })
 }
 
-impl<'a> Line<'a> {
+impl Line<'_> {
     fn operands_rev(&self) -> impl Iterator<Item = Operand> + Clone {
         let mut operands = self.operands;
         iter::from_fn(move || {
@@ -141,7 +141,7 @@ fn is_valid_reverse_recurse_p2<'a>(
     }
 }
 
-fn strip_base10_suffix<'a>(long: u64, suffix: Operand<'a>) -> Option<u64> {
+fn strip_base10_suffix(long: u64, suffix: Operand) -> Option<u64> {
     let remain = long.wrapping_sub(suffix.value); // works on "my input"
     let unit = 10u64.pow(suffix.bytes.len() as u32);
     if remain % unit == 0 {

@@ -23,7 +23,7 @@ fn p1_ticked<CollectorT: LocCounter>(input: String) -> u32 {
         collector.insert(|| loc, || grid.shape.loc_to_index(loc));
 
         'directs: loop {
-            match loc.direct(direct, &grid) {
+            match loc.direct(direct, grid) {
                 None => return collector.count(), // leave map
                 Some(new_loc) => match grid.get(new_loc).unwrap() {
                     b'^' | b'.' => {

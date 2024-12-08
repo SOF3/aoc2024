@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 
-use std::iter;
+use std::{iter, ops};
 
 #[derive(Clone, Copy)]
 pub struct GridView<Input> {
-    pub input:  Input,
+    pub input: Input,
     pub shape: GridShape,
 }
 
@@ -18,7 +18,7 @@ impl<Input: AsRef<[u8]>> GridView<Input> {
     pub fn new(input: Input) -> Self {
         let width = input.as_ref().iter().position(|&b| b == b'\n').unwrap() as u32 + 1;
         let height = (input.as_ref().len() as u32).div_ceil(width);
-        Self { input, shape: GridShape{width, height} }
+        Self { input, shape: GridShape { width, height } }
     }
 
     pub fn get(&self, loc: GridLoc) -> Option<u8> {
@@ -26,10 +26,14 @@ impl<Input: AsRef<[u8]>> GridView<Input> {
     }
 }
 
-impl GridShape {
-    pub fn loc_to_index(&self, loc: GridLoc) -> u32 {
-        loc.y * self.width + loc.x
+impl<Input: AsMut<[u8]>> GridView<Input> {
+    pub fn get_mut(&mut self, loc: GridLoc) -> Option<&mut u8> {
+        self.input.as_mut().get_mut(self.shape.loc_to_index(loc) as usize)
     }
+}
+
+impl GridShape {
+    pub fn loc_to_index(&self, loc: GridLoc) -> u32 { loc.y * self.width + loc.x }
 
     pub fn index_to_loc(&self, index: usize) -> Option<GridLoc> {
         let y = index as u32 / self.width;
@@ -43,15 +47,11 @@ impl GridShape {
 }
 
 impl<Input> From<GridView<Input>> for GridShape {
-    fn from(grid: GridView<Input>) -> Self {
-        grid.shape
-    }
+    fn from(grid: GridView<Input>) -> Self { grid.shape }
 }
 
 impl<'a, Input> From<&'a GridView<Input>> for GridShape {
-    fn from(grid: &'a GridView<Input>) -> Self {
-        grid.shape
-    }
+    fn from(grid: &'a GridView<Input>) -> Self { grid.shape }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -82,15 +82,15 @@ impl GridLoc {
         })
     }
 
-    pub fn direct(self, direct: impl Direct, grid: &GridView<impl AsRef<[u8]>>) -> Option<Self> {
+    pub fn direct(self, direct: impl Direct, grid: impl Into<GridShape> + Copy) -> Option<Self> {
         direct.apply(self, grid)
     }
 
-    pub fn direct_iter<D: Direct, Input: AsRef<[u8]>>(
+    pub fn direct_iter<D: Direct, G: Into<GridShape> + Copy>(
         self,
         direct: D,
-        grid: &GridView<Input>,
-    ) -> impl Iterator<Item = Self> + use<'_, D, Input> {
+        grid: G,
+    ) -> impl Iterator<Item = Self> + use<D, G> {
         let mut loc = Some(self);
         iter::from_fn(move || {
             let output = loc?;
@@ -98,12 +98,49 @@ impl GridLoc {
             Some(output)
         })
     }
+
+    #[must_use]
+    pub fn add(mut self, vector: GridVector, grid: impl Into<GridShape>) -> Option<Self> {
+        self.x = self.x.checked_add_signed(vector.x)?;
+        self.y = self.y.checked_add_signed(vector.y)?;
+
+        let shape: GridShape = grid.into();
+        if self.x < shape.width - 1 && self.y < shape.height {
+            Some(self)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct GridVector {
+    pub x: i32,
+    pub y: i32,
+}
+
+impl ops::Sub<GridLoc> for GridLoc {
+    type Output = GridVector;
+
+    fn sub(self, rhs: GridLoc) -> Self::Output {
+        GridVector { x: self.x as i32 - rhs.x as i32, y: self.y as i32 - rhs.y as i32 }
+    }
+}
+
+impl ops::Mul<i32> for GridVector {
+    type Output = GridVector;
+
+    fn mul(mut self, rhs: i32) -> Self::Output {
+        self.x *= rhs;
+        self.y *= rhs;
+        self
+    }
 }
 
 pub trait Direct: Copy + 'static {
     const ALL: &[Self];
 
-    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc>;
+    fn apply(self, loc: GridLoc, grid: impl Into<GridShape> + Copy) -> Option<GridLoc>;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -128,7 +165,7 @@ impl DirectTaxicab {
 impl Direct for DirectTaxicab {
     const ALL: &[Self] = &[Self::Left, Self::Right, Self::Up, Self::Down];
 
-    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc> {
+    fn apply(self, loc: GridLoc, grid: impl Into<GridShape>) -> Option<GridLoc> {
         match self {
             Self::Left => loc.left(),
             Self::Right => loc.right(grid),
@@ -162,7 +199,7 @@ impl Direct for DirectBoth {
         Self::RightDown,
     ];
 
-    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc> {
+    fn apply(self, loc: GridLoc, grid: impl Into<GridShape> + Copy) -> Option<GridLoc> {
         match self {
             Self::Left => loc.left(),
             Self::Right => loc.right(grid),
@@ -187,7 +224,7 @@ pub enum DirectDiagonal {
 impl Direct for DirectDiagonal {
     const ALL: &[Self] = &[Self::LeftUp, Self::RightUp, Self::LeftDown, Self::RightDown];
 
-    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc> {
+    fn apply(self, loc: GridLoc, grid: impl Into<GridShape> + Copy) -> Option<GridLoc> {
         match self {
             Self::LeftUp => loc.left().and_then(GridLoc::up),
             Self::RightUp => loc.right(grid).and_then(GridLoc::up),

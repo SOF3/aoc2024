@@ -285,11 +285,13 @@ fn all_impl(ts: TokenStream) -> syn::Result<TokenStream> {
                                 &format!("day_{day_number}_part_{}_{fn_ident}", part.part_number),
                                 soln_name.span(),
                             );
-                            let solution_fn_expr = soln_target.fn_expr(day, quote!(aoc2024::all::))?;
+                            let solution_fn_expr =
+                                soln_target.fn_expr(day, quote!(aoc2024::all::))?;
                             let file_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
                                 .join(format!("input/d{day_number}.private.input.txt"));
-                            let file_path =
-                            file_path.to_str().expect("build path must not contain non-unicode characters");
+                            let file_path = file_path
+                                .to_str()
+                                .expect("build path must not contain non-unicode characters");
                             let fn_def = quote_spanned! { soln_name.span() =>
                                 fn #fn_ident() {
                                     let input = include_str!(#file_path);
