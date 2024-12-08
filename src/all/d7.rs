@@ -1,9 +1,9 @@
 use std::iter;
 
-fn fast_parse_once(input: &[u8]) -> Option<(&[u8], u64)> {
+fn fast_parse_once(input: &[u8], delim: u8) -> Option<(&[u8], u64)> {
     let mut buf = input;
     let mut output = 0;
-    while buf.first().is_some_and(u8::is_ascii_digit) {
+    while buf.first().is_some_and(|&digit| digit != delim) {
         output *= 10;
         let (&first, rest) = buf.split_first().unwrap();
         output += u64::from(first - b'0');
@@ -17,11 +17,11 @@ fn fast_parse_once(input: &[u8]) -> Option<(&[u8], u64)> {
     }
 }
 
-fn fast_parse_once_reverse(input: &[u8]) -> Option<(&[u8], Operand)> {
+fn fast_parse_once_reverse(input: &[u8], delim: u8) -> Option<(&[u8], Operand)> {
     let mut buf = input;
     let mut output = 0;
     let mut unit = 1;
-    while buf.last().is_some_and(u8::is_ascii_digit) {
+    while buf.last().is_some_and(|&digit| digit != delim) {
         let (&last, rest) = buf.split_last().unwrap();
         output += u64::from(last - b'0') * unit;
         unit *= 10;
@@ -43,7 +43,7 @@ struct Operand<'a> {
 
 fn parse(input: &str) -> impl Iterator<Item = Line> {
     input.lines().map(|line| {
-        let (operands, result) = fast_parse_once(line.as_bytes()).unwrap();
+        let (operands, result) = fast_parse_once(line.as_bytes(), b':').unwrap();
         Line { result, operands }
     })
 }
@@ -53,7 +53,10 @@ impl<'a> Line<'a> {
         let mut operands = self.operands;
         iter::from_fn(move || {
             operands = operands.trim_ascii_end();
-            let (rest, last) = fast_parse_once_reverse(operands)?;
+            if operands.last() == Some(&b':') {
+                return None;
+            }
+            let (rest, last) = fast_parse_once_reverse(operands, b' ')?;
             operands = rest;
             Some(last)
         })
@@ -102,7 +105,8 @@ pub fn p1_reversed(input: String) -> u64 {
 }
 
 // Try iterating from the back.
-// Break early if unable to reverse addition (negative) or multiplication (not divisible).
+// Break early if unable to reverse addition (negative),
+// concatenation (not divisible after subtraction) or multiplication (not divisible).
 fn is_valid_reverse_recurse_p2<'a>(
     result: u64,
     mut operands: impl Iterator<Item = Operand<'a>> + Clone,
@@ -138,7 +142,7 @@ fn is_valid_reverse_recurse_p2<'a>(
 }
 
 fn strip_base10_suffix<'a>(long: u64, suffix: Operand<'a>) -> Option<u64> {
-    let remain = long - suffix.value;
+    let remain = long.wrapping_sub(suffix.value); // works on "my input"
     let unit = 10u64.pow(suffix.bytes.len() as u32);
     if remain % unit == 0 {
         Some(remain / unit)

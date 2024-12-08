@@ -8,7 +8,7 @@ pub fn p1_brute(input: String) -> u32 {
     let mut count = 0;
 
     for (index, _) in input.match_indices('X') {
-        let loc = grid.index_to_loc(index).unwrap();
+        let loc = grid.shape.index_to_loc(index).unwrap();
         for &dir in DirectBoth::ALL {
             let mut iter = loc.direct_iter(dir, &grid).skip(1).take(3).map(|loc| grid.get(loc));
             let chars: [_; 3] = array::from_fn(|_| iter.next().flatten());
@@ -27,7 +27,7 @@ pub fn p2_brute(input: String) -> u32 {
     let mut count = 0;
 
     for (index, _) in input.match_indices('A') {
-        let loc = grid.index_to_loc(index).unwrap();
+        let loc = grid.shape.index_to_loc(index).unwrap();
         let matched = [
             [DirectDiagonal::LeftUp, DirectDiagonal::RightDown],
             [DirectDiagonal::RightUp, DirectDiagonal::LeftDown],

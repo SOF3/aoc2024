@@ -15,12 +15,12 @@ trait LocCounter {
 fn p1_ticked<CollectorT: LocCounter>(input: String) -> u32 {
     let grid = GridView::new(&input);
 
-    let mut loc = grid.index_to_loc(input.find('^').unwrap()).unwrap();
+    let mut loc = grid.shape.index_to_loc(input.find('^').unwrap()).unwrap();
     let mut direct = DirectTaxicab::Up;
 
     let mut collector = CollectorT::new(input.len());
     'ticks: loop {
-        collector.insert(|| loc, || grid.loc_to_index(loc));
+        collector.insert(|| loc, || grid.shape.loc_to_index(loc));
 
         'directs: loop {
             match loc.direct(direct, &grid) {
@@ -124,7 +124,7 @@ fn is_looping<DetectorT: LoopDetector>(
     let mut direct = DirectTaxicab::Up;
 
     'ticks: loop {
-        if det.insert(|| loc, || grid.loc_to_index(loc), direct) == IsLooped::Repeating {
+        if det.insert(|| loc, || grid.shape.loc_to_index(loc), direct) == IsLooped::Repeating {
             return true;
         }
 
@@ -154,7 +154,7 @@ fn p2_brute<LoopDetectorT: LoopDetector>(input: String) -> u32 {
 
     let input = input.into_bytes();
     let mut grid = GridView::new(input);
-    let initial = grid.index_to_loc(initial_index).unwrap();
+    let initial = grid.shape.index_to_loc(initial_index).unwrap();
 
     let mut count = 0;
     for index in 0..size {

@@ -5,6 +5,11 @@ use std::iter;
 #[derive(Clone, Copy)]
 pub struct GridView<Input> {
     pub input:  Input,
+    pub shape: GridShape,
+}
+
+#[derive(Clone, Copy)]
+pub struct GridShape {
     pub width:  u32,
     pub height: u32,
 }
@@ -13,13 +18,15 @@ impl<Input: AsRef<[u8]>> GridView<Input> {
     pub fn new(input: Input) -> Self {
         let width = input.as_ref().iter().position(|&b| b == b'\n').unwrap() as u32 + 1;
         let height = (input.as_ref().len() as u32).div_ceil(width);
-        Self { input, width, height }
+        Self { input, shape: GridShape{width, height} }
     }
 
     pub fn get(&self, loc: GridLoc) -> Option<u8> {
-        self.input.as_ref().get(self.loc_to_index(loc) as usize).copied()
+        self.input.as_ref().get(self.shape.loc_to_index(loc) as usize).copied()
     }
+}
 
+impl GridShape {
     pub fn loc_to_index(&self, loc: GridLoc) -> u32 {
         loc.y * self.width + loc.x
     }
@@ -35,6 +42,18 @@ impl<Input: AsRef<[u8]>> GridView<Input> {
     }
 }
 
+impl<Input> From<GridView<Input>> for GridShape {
+    fn from(grid: GridView<Input>) -> Self {
+        grid.shape
+    }
+}
+
+impl<'a, Input> From<&'a GridView<Input>> for GridShape {
+    fn from(grid: &'a GridView<Input>) -> Self {
+        grid.shape
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GridLoc {
     pub x: u32,
@@ -43,21 +62,21 @@ pub struct GridLoc {
 
 impl GridLoc {
     pub fn left(self) -> Option<Self> { Some(Self { x: self.x.checked_sub(1)?, y: self.y }) }
-    pub fn right(self, grid: &GridView<impl AsRef<[u8]>>) -> Option<Self> {
+    pub fn right(self, grid: impl Into<GridShape>) -> Option<Self> {
         Some(Self {
             x: match self.x.checked_add(1)? {
-                x if x < grid.width - 1 => x,
+                x if x < grid.into().width - 1 => x,
                 _ => return None,
             },
             y: self.y,
         })
     }
     pub fn up(self) -> Option<Self> { Some(Self { x: self.x, y: self.y.checked_sub(1)? }) }
-    pub fn down(self, grid: &GridView<impl AsRef<[u8]>>) -> Option<Self> {
+    pub fn down(self, grid: impl Into<GridShape>) -> Option<Self> {
         Some(Self {
             x: self.x,
             y: match self.y.checked_add(1)? {
-                y if y < grid.height => y,
+                y if y < grid.into().height => y,
                 _ => return None,
             },
         })
