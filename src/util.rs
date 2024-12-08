@@ -3,21 +3,21 @@
 use std::iter;
 
 #[derive(Clone, Copy)]
-pub struct GridView<'a> {
-    input:  &'a [u8],
-    width:  u32,
-    height: u32,
+pub struct GridView<Input> {
+    pub input:  Input,
+    pub width:  u32,
+    pub height: u32,
 }
 
-impl<'a> GridView<'a> {
-    pub fn new(input: &'a impl AsRef<[u8]>) -> Self {
-        let input = input.as_ref();
-        let width = input.iter().position(|&b| b == b'\n').unwrap() as u32 + 1;
-        Self { input, width, height: (input.len() as u32).div_ceil(width) }
+impl<Input: AsRef<[u8]>> GridView<Input> {
+    pub fn new(input: Input) -> Self {
+        let width = input.as_ref().iter().position(|&b| b == b'\n').unwrap() as u32 + 1;
+        let height = (input.as_ref().len() as u32).div_ceil(width);
+        Self { input, width, height }
     }
 
     pub fn get(&self, loc: GridLoc) -> Option<u8> {
-        self.input.get(self.loc_to_index(loc) as usize).copied()
+        self.input.as_ref().get(self.loc_to_index(loc) as usize).copied()
     }
 
     pub fn loc_to_index(&self, loc: GridLoc) -> u32 {
@@ -43,7 +43,7 @@ pub struct GridLoc {
 
 impl GridLoc {
     pub fn left(self) -> Option<Self> { Some(Self { x: self.x.checked_sub(1)?, y: self.y }) }
-    pub fn right(self, grid: GridView) -> Option<Self> {
+    pub fn right(self, grid: &GridView<impl AsRef<[u8]>>) -> Option<Self> {
         Some(Self {
             x: match self.x.checked_add(1)? {
                 x if x < grid.width - 1 => x,
@@ -53,7 +53,7 @@ impl GridLoc {
         })
     }
     pub fn up(self) -> Option<Self> { Some(Self { x: self.x, y: self.y.checked_sub(1)? }) }
-    pub fn down(self, grid: GridView) -> Option<Self> {
+    pub fn down(self, grid: &GridView<impl AsRef<[u8]>>) -> Option<Self> {
         Some(Self {
             x: self.x,
             y: match self.y.checked_add(1)? {
@@ -63,15 +63,15 @@ impl GridLoc {
         })
     }
 
-    pub fn direct(self, direct: impl Direct, grid: GridView) -> Option<Self> {
+    pub fn direct(self, direct: impl Direct, grid: &GridView<impl AsRef<[u8]>>) -> Option<Self> {
         direct.apply(self, grid)
     }
 
-    pub fn direct_iter<D: Direct>(
+    pub fn direct_iter<D: Direct, Input: AsRef<[u8]>>(
         self,
         direct: D,
-        grid: GridView,
-    ) -> impl Iterator<Item = Self> + use<'_, D> {
+        grid: &GridView<Input>,
+    ) -> impl Iterator<Item = Self> + use<'_, D, Input> {
         let mut loc = Some(self);
         iter::from_fn(move || {
             let output = loc?;
@@ -84,10 +84,10 @@ impl GridLoc {
 pub trait Direct: Copy + 'static {
     const ALL: &[Self];
 
-    fn apply(self, loc: GridLoc, grid: GridView) -> Option<GridLoc>;
+    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc>;
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DirectTaxicab {
     Left,
     Right,
@@ -109,7 +109,7 @@ impl DirectTaxicab {
 impl Direct for DirectTaxicab {
     const ALL: &[Self] = &[Self::Left, Self::Right, Self::Up, Self::Down];
 
-    fn apply(self, loc: GridLoc, grid: GridView) -> Option<GridLoc> {
+    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc> {
         match self {
             Self::Left => loc.left(),
             Self::Right => loc.right(grid),
@@ -119,7 +119,7 @@ impl Direct for DirectTaxicab {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DirectBoth {
     Left,
     Right,
@@ -143,7 +143,7 @@ impl Direct for DirectBoth {
         Self::RightDown,
     ];
 
-    fn apply(self, loc: GridLoc, grid: GridView) -> Option<GridLoc> {
+    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc> {
         match self {
             Self::Left => loc.left(),
             Self::Right => loc.right(grid),
@@ -157,7 +157,7 @@ impl Direct for DirectBoth {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DirectDiagonal {
     LeftUp,
     RightUp,
@@ -168,7 +168,7 @@ pub enum DirectDiagonal {
 impl Direct for DirectDiagonal {
     const ALL: &[Self] = &[Self::LeftUp, Self::RightUp, Self::LeftDown, Self::RightDown];
 
-    fn apply(self, loc: GridLoc, grid: GridView) -> Option<GridLoc> {
+    fn apply(self, loc: GridLoc, grid: &GridView<impl AsRef<[u8]>>) -> Option<GridLoc> {
         match self {
             Self::LeftUp => loc.left().and_then(GridLoc::up),
             Self::RightUp => loc.right(grid).and_then(GridLoc::up),

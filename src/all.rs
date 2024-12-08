@@ -141,7 +141,11 @@ macros::all! {
         part 1 {
             "ticked-fxhash-loc" => p1_ticked_fxhash_loc,
             "ticked-fxhash-index" => p1_ticked_fxhash_index,
+            "ticked-boolvec" => p1_ticked_boolvec,
             "ticked-bitvec" => p1_ticked_bitvec,
+        }
+        part 2 {
+            "brute-fxhash-loc" => p2_brute_fxhash_loc,
         }
     }
 }
