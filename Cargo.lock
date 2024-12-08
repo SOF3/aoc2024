@@ -716,8 +716,10 @@ dependencies = [
 [[package]]
 name = "iai"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71a816c97c42258aa5834d07590b718b4c9a598944cd39a52dc25b351185d678"
+source = "git+https://github.com/bend-n/iai#30f77d9d165f8d2e1fcea8f87bd01cc03d821ae6"
+dependencies = [
+ "cfg-if",
+]
 
 [[package]]
 name = "icu_collections"

@@ -23,7 +23,7 @@ jq-src = { git = "https://github.com/SOF3/jq-src", rev = "refs/tags/jq-1.7.1" }
 
 [dev-dependencies]
 criterion = "0.5.1"
-iai = "0.1.1"
+iai = { version = "0.1.1", git = "https://github.com/bend-n/iai" }
 
 [[bench]]
 name = "criterion"

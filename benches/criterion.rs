@@ -18,5 +18,5 @@ fn call_benched<In: Parse, Out: fmt::Display>(b: &mut Bencher, day: u32, f: impl
     b.iter_batched(|| parsed.clone(), f, BatchSize::LargeInput);
 }
 
-criterion_group!(benches, bench);
-criterion_main!(benches);
+criterion_group!(criterion, bench);
+criterion_main!(criterion);
