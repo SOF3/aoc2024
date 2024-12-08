@@ -22,6 +22,29 @@ jobs:
       # since the iai version cannot be built without private inputs.
       - name: Run iai
         run: cargo bench iai --features iai-bench >target/criterion/iai.txt
+      - name: Generate index page
+        run: |
+          cat <<EOF > target/criterion/index.html
+          <html>
+          <head>
+            <title>AoC 2024 solutions by SOFe</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          </head>
+          <body>
+            <h1>AoC 2024 solutions by SOFe</h1>
+            <ul>
+              <li><a href="https://github.com/SOF3/aoc2024">Source code</a></li>
+              <li>
+                <a href="./report/index.html">Benchmark reports</a>
+                (executed on GitHub CI, very unreliable)
+              </li>
+              <li><a href="./iai.txt">
+                Cachegrind-based CPU cycle &amp; memory access report
+              </a></li>
+            </ul>
+          </body>
+          </html>
+          EOF
       - name: Publish results
         id: deployment
         uses: actions/upload-pages-artifact@v3
