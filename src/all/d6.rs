@@ -1,4 +1,5 @@
-use std::{collections::HashSet, hash::BuildHasher};
+use std::collections::HashSet;
+use std::hash::BuildHasher;
 
 use bitvec::vec::BitVec;
 use rustc_hash::FxHashSet;
@@ -24,56 +25,44 @@ fn p1_ticked<CollectorT: LocCounter>(input: String) -> u32 {
         'directs: loop {
             match loc.direct(direct, &grid) {
                 None => return collector.count(), // leave map
-                Some(new_loc) => {
-                    match grid.get(new_loc).unwrap() {
-                        b'^' | b'.' => {
-                            loc = new_loc;
-                            continue 'ticks
-                        }
-                        b'#' => {
-                            direct = direct.clockwise();
-                            continue 'directs
-                        }
-                        _ => unreachable!(),
+                Some(new_loc) => match grid.get(new_loc).unwrap() {
+                    b'^' | b'.' => {
+                        loc = new_loc;
+                        continue 'ticks;
                     }
-                }
+                    b'#' => {
+                        direct = direct.clockwise();
+                        continue 'directs;
+                    }
+                    _ => unreachable!(),
+                },
             }
         }
     }
 }
 
 impl<S: BuildHasher + Default> LocCounter for HashSet<GridLoc, S> {
-    fn new(capacity: usize) -> Self {
-        Self::with_capacity_and_hasher(capacity, S::default())
-    }
+    fn new(capacity: usize) -> Self { Self::with_capacity_and_hasher(capacity, S::default()) }
 
     fn insert(&mut self, loc: impl FnOnce() -> GridLoc, _: impl FnOnce() -> u32) {
         HashSet::insert(self, loc());
     }
 
-    fn count(&self) -> u32 {
-        self.len() as u32
-    }
+    fn count(&self) -> u32 { self.len() as u32 }
 }
 
 impl<S: BuildHasher + Default> LocCounter for HashSet<u32, S> {
-    fn new(capacity: usize) -> Self {
-        Self::with_capacity_and_hasher(capacity, S::default())
-    }
+    fn new(capacity: usize) -> Self { Self::with_capacity_and_hasher(capacity, S::default()) }
 
     fn insert(&mut self, _: impl FnOnce() -> GridLoc, index: impl FnOnce() -> u32) {
         HashSet::insert(self, index());
     }
 
-    fn count(&self) -> u32 {
-        self.len() as u32
-    }
+    fn count(&self) -> u32 { self.len() as u32 }
 }
 
 impl LocCounter for Vec<bool> {
-    fn new(capacity: usize) -> Self {
-        vec![false; capacity]
-    }
+    fn new(capacity: usize) -> Self { vec![false; capacity] }
 
     fn insert(&mut self, _: impl FnOnce() -> GridLoc, index: impl FnOnce() -> u32) {
         self[index() as usize] = true;
@@ -92,17 +81,13 @@ impl LocCounter for Vec<bool> {
 }
 
 impl LocCounter for BitVec {
-    fn new(capacity: usize) -> Self {
-        Self::repeat(false, capacity)
-    }
+    fn new(capacity: usize) -> Self { Self::repeat(false, capacity) }
 
     fn insert(&mut self, _: impl FnOnce() -> GridLoc, index: impl FnOnce() -> u32) {
         self.set(index() as usize, true);
     }
 
-    fn count(&self) -> u32 {
-        self.count_ones() as u32
-    }
+    fn count(&self) -> u32 { self.count_ones() as u32 }
 }
 
 pub fn p1_ticked_fxhash_loc(input: String) -> u32 { p1_ticked::<FxHashSet<GridLoc>>(input) }
@@ -114,7 +99,12 @@ trait LoopDetector {
     fn new(capacity: usize) -> Self;
     fn clear(&mut self);
 
-    fn insert(&mut self, loc: impl FnOnce() -> GridLoc, index: impl FnOnce() -> u32, direct: DirectTaxicab) -> IsLooped;
+    fn insert(
+        &mut self,
+        loc: impl FnOnce() -> GridLoc,
+        index: impl FnOnce() -> u32,
+        direct: DirectTaxicab,
+    ) -> IsLooped;
 }
 
 #[derive(PartialEq, Eq)]
@@ -123,7 +113,11 @@ enum IsLooped {
     NewStep,
 }
 
-fn is_looping<DetectorT: LoopDetector>(grid: &GridView<impl AsRef<[u8]>>, det: &mut DetectorT, initial: GridLoc) -> bool {
+fn is_looping<DetectorT: LoopDetector>(
+    grid: &GridView<impl AsRef<[u8]>>,
+    det: &mut DetectorT,
+    initial: GridLoc,
+) -> bool {
     det.clear();
 
     let mut loc = initial;
@@ -137,19 +131,17 @@ fn is_looping<DetectorT: LoopDetector>(grid: &GridView<impl AsRef<[u8]>>, det: &
         'directs: loop {
             match loc.direct(direct, grid) {
                 None => return false, // leave map
-                Some(new_loc) => {
-                    match grid.get(new_loc).unwrap() {
-                        b'^' | b'.' => {
-                            loc = new_loc;
-                            continue 'ticks
-                        }
-                        b'#' => {
-                            direct = direct.clockwise();
-                            continue 'directs
-                        }
-                        _ => unreachable!(),
+                Some(new_loc) => match grid.get(new_loc).unwrap() {
+                    b'^' | b'.' => {
+                        loc = new_loc;
+                        continue 'ticks;
                     }
-                }
+                    b'#' => {
+                        direct = direct.clockwise();
+                        continue 'directs;
+                    }
+                    _ => unreachable!(),
+                },
             }
         }
     }
@@ -177,16 +169,17 @@ fn p2_brute<LoopDetectorT: LoopDetector>(input: String) -> u32 {
     count
 }
 
-impl<S: BuildHasher+Default> LoopDetector for HashSet<(GridLoc, DirectTaxicab), S> {
-    fn new(capacity: usize) -> Self {
-        HashSet::with_capacity_and_hasher(capacity, S::default())
-    }
+impl<S: BuildHasher + Default> LoopDetector for HashSet<(GridLoc, DirectTaxicab), S> {
+    fn new(capacity: usize) -> Self { HashSet::with_capacity_and_hasher(capacity, S::default()) }
 
-    fn clear(&mut self) {
-        HashSet::clear(self)
-    }
+    fn clear(&mut self) { HashSet::clear(self) }
 
-    fn insert(&mut self, loc: impl FnOnce() -> GridLoc, _: impl FnOnce() -> u32, direct: DirectTaxicab) -> IsLooped {
+    fn insert(
+        &mut self,
+        loc: impl FnOnce() -> GridLoc,
+        _: impl FnOnce() -> u32,
+        direct: DirectTaxicab,
+    ) -> IsLooped {
         if HashSet::insert(self, (loc(), direct)) {
             IsLooped::NewStep
         } else {
@@ -195,4 +188,6 @@ impl<S: BuildHasher+Default> LoopDetector for HashSet<(GridLoc, DirectTaxicab), 
     }
 }
 
-pub fn p2_brute_fxhash_loc(input: String) -> u32 { p2_brute::<FxHashSet<(GridLoc, DirectTaxicab)>>(input) }
+pub fn p2_brute_fxhash_loc(input: String) -> u32 {
+    p2_brute::<FxHashSet<(GridLoc, DirectTaxicab)>>(input)
+}

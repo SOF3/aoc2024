@@ -148,4 +148,12 @@ macros::all! {
             "brute-fxhash-loc" => p2_brute_fxhash_loc,
         }
     }
+    day 7 {
+        part 1 {
+            "reversed" => p1_reversed,
+        }
+        part 2 {
+            "reversed" => p2_reversed,
+        }
+    }
 }
