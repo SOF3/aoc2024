@@ -83,9 +83,11 @@ macros::all! {
     day 7 {
         part 1 {
             "reversed" => p1_reversed,
+            "jq" => jq["d7q1"],
         }
         part 2 {
             "reversed" => p2_reversed,
+            "jq" => jq["d7q2"],
         }
     }
     day 8 {
