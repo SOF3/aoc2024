@@ -107,7 +107,6 @@ fn p1<DenyListsT: DenyLists, DisallowedSetT: DisallowedSet>(input: Input) -> u32
     }
 
     let mut result = 0;
-
     let mut disallowed = DisallowedSetT::default();
 
     'update: for Update(items) in input.updates {

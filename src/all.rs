@@ -137,4 +137,11 @@ macros::all! {
             "btreemap-vec" => p1_btreemap_vec,
         }
     }
+    day 6 {
+        part 1 {
+            "ticked-fxhash-loc" => p1_ticked_fxhash_loc,
+            "ticked-fxhash-index" => p1_ticked_fxhash_index,
+            "ticked-bitvec" => p1_ticked_bitvec,
+        }
+    }
 }

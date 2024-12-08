@@ -9,6 +9,7 @@ jobs:
     name: run benchmark
     runs-on: ubuntu-latest
     steps:
+      - run: sudo apt install valgrind
       - name: Check out base
         uses: actions/checkout@v4
       - name: Install Rust

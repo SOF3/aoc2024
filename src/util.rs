@@ -17,7 +17,11 @@ impl<'a> GridView<'a> {
     }
 
     pub fn get(&self, loc: GridLoc) -> Option<u8> {
-        self.input.get((loc.y * self.width + loc.x) as usize).copied()
+        self.input.get(self.loc_to_index(loc) as usize).copied()
+    }
+
+    pub fn loc_to_index(&self, loc: GridLoc) -> u32 {
+        loc.y * self.width + loc.x
     }
 
     pub fn index_to_loc(&self, index: usize) -> Option<GridLoc> {
@@ -31,10 +35,10 @@ impl<'a> GridView<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GridLoc {
-    x: u32,
-    y: u32,
+    pub x: u32,
+    pub y: u32,
 }
 
 impl GridLoc {
@@ -89,6 +93,17 @@ pub enum DirectTaxicab {
     Right,
     Up,
     Down,
+}
+
+impl DirectTaxicab {
+    pub fn clockwise(self) -> Self {
+        match self {
+            Self::Left => Self::Up,
+            Self::Up => Self::Right,
+            Self::Right => Self::Down,
+            Self::Down => Self::Left,
+        }
+    }
 }
 
 impl Direct for DirectTaxicab {
