@@ -98,4 +98,9 @@ macros::all! {
             "naive" => p2_naive,
         }
     }
+    day 9 {
+        part 1 {
+            "chunk-iter" => p1_chunk_iter,
+        }
+    }
 }
